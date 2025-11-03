@@ -5,6 +5,7 @@ import { AudioPlayer } from "@/components/AudioPlayer";
 import { FeatureSelector } from "@/components/FeatureSelector";
 import { ResultsDisplay } from "@/components/ResultsDisplay";
 import { Loader2, Wand2, Globe2 } from "lucide-react";
+import { simulatePrediction } from "@/lib/languages";
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
@@ -20,25 +21,17 @@ const Index = () => {
     setIsProcessing(true);
     setResults(null);
 
-    try {
-      const { processAudio } = await import('@/lib/audioProcessing');
-      const prediction = await processAudio(audioFile, featureMethod);
-      setResults(prediction);
+    // Simulate processing time
+    await new Promise((resolve) => setTimeout(resolve, 2500));
 
-      toast({
-        title: "Analysis Complete",
-        description: `Detected native language with ${(prediction.confidence * 100).toFixed(1)}% confidence`,
-      });
-    } catch (error) {
-      console.error('Error processing audio:', error);
-      toast({
-        title: "Processing Error",
-        description: "Failed to process audio. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsProcessing(false);
-    }
+    const prediction = simulatePrediction(featureMethod);
+    setResults(prediction);
+    setIsProcessing(false);
+
+    toast({
+      title: "Analysis Complete",
+      description: `Detected native language with ${(prediction.confidence * 100).toFixed(1)}% confidence`,
+    });
   };
 
   const handleReset = () => {
