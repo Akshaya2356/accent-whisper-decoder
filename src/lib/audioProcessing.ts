@@ -67,35 +67,34 @@ export const processAudio = async (audioFile: File, method: "hubert" | "mfcc") =
   }
 };
 
-// Map Whisper detected language to Indian languages with confidence scores
+// Map Whisper detected language to Indian accents from IndicAccentDb dataset
+// IndicAccentDb contains 6 non-native English accents: Gujarati, Hindi, Kannada, Malayalam, Tamil, Telugu
 const mapWhisperLanguage = (detectedLang: string) => {
-  // Map common Whisper language codes to Indian languages
+  // Map Whisper language codes to IndicAccentDb accent categories (native language backgrounds)
   const languageMapping: Record<string, string> = {
     'hi': 'hindi',
     'ta': 'tamil',
     'te': 'telugu',
     'ml': 'malayalam',
     'kn': 'kannada',
-    'bn': 'bengali',
-    'mr': 'marathi',
     'gu': 'gujarati',
-    'pa': 'punjabi',
-    'en': 'english', // English as reference
+    'en': 'hindi', // Default to hindi for English
   };
 
-  const allLanguages = ['hindi', 'tamil', 'telugu', 'malayalam', 'kannada', 'bengali', 'marathi', 'gujarati', 'punjabi'];
+  // The 6 accent categories from IndicAccentDb dataset
+  const accentCategories = ['gujarati', 'hindi', 'kannada', 'malayalam', 'tamil', 'telugu'];
   
-  // Get the mapped language
-  const primaryLanguage = languageMapping[detectedLang] || 'hindi';
+  // Get the mapped accent category
+  const primaryAccent = languageMapping[detectedLang] || 'hindi';
   
-  // Create confidence scores with the detected language having highest confidence
-  const languageScores = allLanguages.map(lang => ({
-    language: lang,
-    score: lang === primaryLanguage ? 0.85 : (0.15 / (allLanguages.length - 1))
+  // Create confidence scores with the detected accent having highest confidence
+  const accentScores = accentCategories.map(accent => ({
+    language: accent,
+    score: accent === primaryAccent ? 0.85 : (0.15 / (accentCategories.length - 1))
   }));
   
   // Sort by score
-  return languageScores.sort((a, b) => b.score - a.score);
+  return accentScores.sort((a, b) => b.score - a.score);
 };
 
 export const extractFeatures = async (audioFile: File, method: "hubert" | "mfcc") => {

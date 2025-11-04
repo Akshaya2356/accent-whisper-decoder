@@ -11,22 +11,34 @@ export interface Cuisine {
 }
 
 export const languages: Language[] = [
+  { code: "gujarati", name: "Gujarati", region: "Gujarat" },
   { code: "hindi", name: "Hindi", region: "North India" },
+  { code: "kannada", name: "Kannada", region: "Karnataka" },
+  { code: "malayalam", name: "Malayalam", region: "Kerala" },
   { code: "tamil", name: "Tamil", region: "Tamil Nadu" },
   { code: "telugu", name: "Telugu", region: "Andhra Pradesh & Telangana" },
-  { code: "malayalam", name: "Malayalam", region: "Kerala" },
-  { code: "kannada", name: "Kannada", region: "Karnataka" },
-  { code: "bengali", name: "Bengali", region: "West Bengal" },
-  { code: "marathi", name: "Marathi", region: "Maharashtra" },
-  { code: "gujarati", name: "Gujarati", region: "Gujarat" },
-  { code: "punjabi", name: "Punjabi", region: "Punjab" },
 ];
 
 const cuisineDatabase: Record<string, Cuisine[]> = {
+  gujarati: [
+    { name: "Dhokla", description: "Steamed savory cake", emoji: "🍰" },
+    { name: "Khandvi", description: "Rolled gram flour snack", emoji: "🥨" },
+    { name: "Undhiyu", description: "Mixed vegetable curry", emoji: "🥘" },
+  ],
   hindi: [
     { name: "Butter Chicken", description: "Creamy tomato-based curry", emoji: "🍗" },
     { name: "Chole Bhature", description: "Spicy chickpeas with fried bread", emoji: "🫓" },
     { name: "Paneer Tikka", description: "Grilled cottage cheese", emoji: "🧀" },
+  ],
+  kannada: [
+    { name: "Bisi Bele Bath", description: "Rice, lentils and vegetables", emoji: "🍲" },
+    { name: "Mysore Pak", description: "Sweet gram flour fudge", emoji: "🍬" },
+    { name: "Ragi Mudde", description: "Finger millet balls", emoji: "⚪" },
+  ],
+  malayalam: [
+    { name: "Appam", description: "Rice pancake with coconut milk", emoji: "🥞" },
+    { name: "Puttu", description: "Steamed rice cake with coconut", emoji: "🍚" },
+    { name: "Kerala Fish Curry", description: "Coconut-based fish stew", emoji: "🐟" },
   ],
   tamil: [
     { name: "Dosa", description: "Crispy rice and lentil crepe", emoji: "🥞" },
@@ -37,36 +49,6 @@ const cuisineDatabase: Record<string, Cuisine[]> = {
     { name: "Hyderabadi Biryani", description: "Aromatic rice with meat", emoji: "🍚" },
     { name: "Gongura Pickle", description: "Tangy sorrel leaves condiment", emoji: "🥗" },
     { name: "Pesarattu", description: "Green gram dosa", emoji: "🥞" },
-  ],
-  malayalam: [
-    { name: "Appam", description: "Rice pancake with coconut milk", emoji: "🥞" },
-    { name: "Puttu", description: "Steamed rice cake with coconut", emoji: "🍚" },
-    { name: "Kerala Fish Curry", description: "Coconut-based fish stew", emoji: "🐟" },
-  ],
-  kannada: [
-    { name: "Bisi Bele Bath", description: "Rice, lentils and vegetables", emoji: "🍲" },
-    { name: "Mysore Pak", description: "Sweet gram flour fudge", emoji: "🍬" },
-    { name: "Ragi Mudde", description: "Finger millet balls", emoji: "⚪" },
-  ],
-  bengali: [
-    { name: "Machher Jhol", description: "Bengali fish curry", emoji: "🐟" },
-    { name: "Mishti Doi", description: "Sweet yogurt dessert", emoji: "🍮" },
-    { name: "Rasgulla", description: "Spongy cheese balls in syrup", emoji: "⚪" },
-  ],
-  marathi: [
-    { name: "Vada Pav", description: "Spicy potato fritter in bun", emoji: "🍔" },
-    { name: "Puran Poli", description: "Sweet flatbread with lentils", emoji: "🫓" },
-    { name: "Misal Pav", description: "Spicy sprouts curry with bread", emoji: "🍲" },
-  ],
-  gujarati: [
-    { name: "Dhokla", description: "Steamed savory cake", emoji: "🍰" },
-    { name: "Khandvi", description: "Rolled gram flour snack", emoji: "🥨" },
-    { name: "Undhiyu", description: "Mixed vegetable curry", emoji: "🥘" },
-  ],
-  punjabi: [
-    { name: "Sarson ka Saag", description: "Mustard greens curry", emoji: "🥬" },
-    { name: "Amritsari Kulcha", description: "Stuffed bread", emoji: "🫓" },
-    { name: "Makki di Roti", description: "Corn flour flatbread", emoji: "🌽" },
   ],
 };
 
