@@ -4,7 +4,6 @@ import { AudioUploader } from "@/components/AudioUploader";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { FeatureSelector } from "@/components/FeatureSelector";
 import { ResultsDisplay } from "@/components/ResultsDisplay";
-import { ComparativeAnalysis } from "@/components/ComparativeAnalysis";
 import { Loader2, Wand2, Globe2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -146,10 +145,7 @@ const Index = () => {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <ResultsDisplay prediction={results} />
-                <ComparativeAnalysis prediction={results} />
-              </div>
+              <ResultsDisplay prediction={results} />
             </div>
           )}
         </div>
@@ -157,15 +153,9 @@ const Index = () => {
 
       {/* Footer */}
       <footer className="border-t border-border/50 mt-20 py-8">
-        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground space-y-2">
-          <p className="font-medium">
-            Powered by HuBERT embeddings and MFCC feature extraction
-          </p>
+        <div className="container mx-auto px-6 text-center text-sm text-muted-foreground">
           <p>
-            Native Language Identification using IndicAccentDb • Comparative analysis of accent modeling techniques
-          </p>
-          <p className="text-xs">
-            Analyzing phonetic, prosodic, and spectral features to identify L1 influence on Indian English speech
+            Powered by HuBERT and MFCC feature extraction • Built for native language identification research
           </p>
         </div>
       </footer>

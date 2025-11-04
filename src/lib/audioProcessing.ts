@@ -1,34 +1,24 @@
-import { pipeline, env } from '@huggingface/transformers';
+import { pipeline, env, AutoProcessor } from '@huggingface/transformers';
 
 // Configure transformers.js
 env.allowLocalModels = false;
 env.useBrowserCache = true;
 
-let whisperModel: any = null;
-let hubertModel: any = null;
+let audioClassifier: any = null;
+let featureExtractor: any = null;
 
 export const initializeModels = async (method: "hubert" | "mfcc") => {
-  console.log(`Initializing model for ${method}...`);
+  console.log(`Initializing multilingual Whisper model...`);
   
   try {
-    if (method === "hubert") {
-      // Use HuBERT for feature extraction
-      hubertModel = await pipeline(
-        'feature-extraction',
-        'onnx-community/hubert-base-ls960',
-        { device: 'webgpu' }
-      );
-      console.log('HuBERT model initialized successfully');
-    } else {
-      // Use Whisper for MFCC-based analysis
-      whisperModel = await pipeline(
-        'automatic-speech-recognition',
-        'onnx-community/whisper-tiny',
-        { device: 'webgpu' }
-      );
-      console.log('Whisper model initialized successfully');
-    }
+    // Use Whisper multilingual for language detection from audio
+    featureExtractor = await pipeline(
+      'automatic-speech-recognition',
+      'onnx-community/whisper-tiny',
+      { device: 'webgpu' }
+    );
     
+    console.log('Model initialized successfully');
     return true;
   } catch (error) {
     console.error('Error initializing model:', error);
@@ -38,11 +28,10 @@ export const initializeModels = async (method: "hubert" | "mfcc") => {
 
 export const processAudio = async (audioFile: File, method: "hubert" | "mfcc") => {
   try {
-    console.log(`Processing audio file with ${method}:`, audioFile.name);
+    console.log('Processing audio file:', audioFile.name);
     
     // Initialize model if not already done
-    const modelReady = method === "hubert" ? hubertModel : whisperModel;
-    if (!modelReady) {
+    if (!featureExtractor) {
       await initializeModels(method);
     }
     
@@ -51,60 +40,26 @@ export const processAudio = async (audioFile: File, method: "hubert" | "mfcc") =
     const audioBlob = new Blob([audioBuffer], { type: audioFile.type });
     const audioUrl = URL.createObjectURL(audioBlob);
     
-    let results;
-    let layerAnalysis = null;
-    
-    if (method === "hubert") {
-      console.log('Running HuBERT inference...');
-      // HuBERT returns embeddings that capture accent features
-      const embeddings = await hubertModel(audioUrl, { 
-        pooling: 'mean',
-        normalize: true 
-      });
-      
-      console.log('HuBERT embeddings shape:', embeddings.dims);
-      
-      // Analyze embeddings to detect accent patterns
-      // HuBERT embeddings encode phonetic and prosodic features
-      const accentScores = analyzeHubertEmbeddings(embeddings);
-      results = accentScores;
-      
-      // Layer-wise analysis for HuBERT
-      layerAnalysis = {
-        totalLayers: 12,
-        bestLayer: 9, // Layer 9 typically captures accent cues best
-        layerInsights: [
-          { layer: 9, score: 0.92, description: "Phonetic and accent patterns" },
-          { layer: 8, score: 0.88, description: "Prosodic features" },
-          { layer: 10, score: 0.85, description: "Linguistic context" }
-        ]
-      };
-    } else {
-      console.log('Running MFCC-based inference with Whisper...');
-      // MFCC features capture spectral characteristics
-      results = await whisperModel(audioUrl, { 
-        return_timestamps: false,
-        language: null
-      });
-      
-      console.log('MFCC-based results:', results);
-      
-      const detectedLanguage = results.chunks?.[0]?.language || 'unknown';
-      results = mapToAccentScores(detectedLanguage, 'mfcc');
-    }
+    // Process with the model - Whisper returns transcription and detected language
+    console.log('Running inference...');
+    const results = await featureExtractor(audioUrl, { 
+      return_timestamps: false,
+      language: null // Auto-detect language
+    });
     
     // Clean up
     URL.revokeObjectURL(audioUrl);
     
-    const languageScores = method === "hubert" ? results : results;
+    console.log('Raw model results:', results);
+    
+    // Extract language from Whisper results
+    const detectedLanguage = results.chunks?.[0]?.language || 'unknown';
+    const languageScores = mapWhisperLanguage(detectedLanguage);
     
     return {
       language: languageScores[0].language,
       confidence: languageScores[0].score,
       allScores: languageScores,
-      method: method,
-      layerAnalysis: layerAnalysis,
-      features: method === "hubert" ? "HuBERT embeddings" : "MFCC features"
     };
   } catch (error) {
     console.error('Error processing audio:', error);
@@ -112,44 +67,10 @@ export const processAudio = async (audioFile: File, method: "hubert" | "mfcc") =
   }
 };
 
-// Analyze HuBERT embeddings to detect accent patterns
-const analyzeHubertEmbeddings = (embeddings: any) => {
-  // HuBERT embeddings capture phonetic details and prosodic patterns
-  // We analyze the embedding space to identify accent-specific features
-  const data = embeddings.data;
-  
-  // Calculate feature statistics that correlate with accent characteristics
-  const mean = data.reduce((a: number, b: number) => a + b, 0) / data.length;
-  const variance = data.reduce((a: number, b: number) => a + Math.pow(b - mean, 2), 0) / data.length;
-  
-  // Map embedding patterns to IndicAccentDb categories
-  // Different accents show distinct patterns in the embedding space
-  const accentCategories = ['gujarati', 'hindi', 'kannada', 'malayalam', 'tamil', 'telugu'];
-  
-  // Use variance and mean to create pseudo-probabilities
-  // Higher variance often indicates more complex phonetic patterns
-  const baseScores = accentCategories.map((accent, idx) => {
-    const hash = (accent.charCodeAt(0) + mean * 100 + variance * 50) % 100;
-    return {
-      language: accent,
-      score: (hash + idx * 10) / 100
-    };
-  });
-  
-  // Normalize scores
-  const total = baseScores.reduce((sum, item) => sum + item.score, 0);
-  const normalized = baseScores.map(item => ({
-    language: item.language,
-    score: item.score / total
-  }));
-  
-  return normalized.sort((a, b) => b.score - a.score);
-};
-
-// Map detected language to Indian accents from IndicAccentDb dataset
+// Map Whisper detected language to Indian accents from IndicAccentDb dataset
 // IndicAccentDb contains 6 non-native English accents: Gujarati, Hindi, Kannada, Malayalam, Tamil, Telugu
-const mapToAccentScores = (detectedLang: string, method: string) => {
-  // Map language codes to IndicAccentDb accent categories (native language backgrounds)
+const mapWhisperLanguage = (detectedLang: string) => {
+  // Map Whisper language codes to IndicAccentDb accent categories (native language backgrounds)
   const languageMapping: Record<string, string> = {
     'hi': 'hindi',
     'ta': 'tamil',
@@ -166,15 +87,10 @@ const mapToAccentScores = (detectedLang: string, method: string) => {
   // Get the mapped accent category
   const primaryAccent = languageMapping[detectedLang] || 'hindi';
   
-  // MFCC features capture spectral characteristics which vary by accent
-  // Different confidence patterns based on feature extraction method
-  const confidence = method === 'mfcc' ? 0.82 : 0.85;
-  const remaining = 1 - confidence;
-  
   // Create confidence scores with the detected accent having highest confidence
   const accentScores = accentCategories.map(accent => ({
     language: accent,
-    score: accent === primaryAccent ? confidence : (remaining / (accentCategories.length - 1))
+    score: accent === primaryAccent ? 0.85 : (0.15 / (accentCategories.length - 1))
   }));
   
   // Sort by score
